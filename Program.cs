@@ -36,6 +36,8 @@ var credentialsTarget = $"Hello/{localUser}";
 
 var credentials = CredentialManager.GetCredentials(credentialsTarget);
 
+var parent = ParentProcessUtils.GetParentWithWindow();
+
 if (credentials is null)
 {
 	var credentialsResponse = await CredentialPicker.PickAsync(new CredentialPickerOptions
@@ -64,7 +66,7 @@ if (credentials is null)
 }
 else
 {
-	var verificationResult = await UserConsentVerifier.RequestVerificationAsync("Verify for PGP signing");
+	var verificationResult = await UserConsentVerifierInterop.RequestVerificationForWindowAsync(parent?.MainWindowHandle ?? 0,"Verify for PGP signing");
 	if (verificationResult != UserConsentVerificationResult.Verified)
 	{
 		Console.Error.WriteLine("Error: Could not verify identity");
@@ -73,13 +75,9 @@ else
 	}
 }
 
-for (var parent = ParentProcessUtils.GetParentProcess(); parent is not null; parent = ParentProcessUtils.GetParentProcess(parent))
+if (parent is not null)
 {
-	if (parent.MainWindowHandle > 0)
-	{
-		WindowManagerUtils.SetForegroundWindow(parent.MainWindowHandle);
-		break;
-	}
+	WindowManagerUtils.SetForegroundWindow(parent.MainWindowHandle);
 }
 
 using var privateKeyFile = File.OpenRead(privateKeyPath);

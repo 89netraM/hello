@@ -22,6 +22,18 @@ public struct ParentProcessUtils
 	[DllImport("ntdll.dll")]
 	private static extern int NtQueryInformationProcess(IntPtr processHandle, int processInformationClass, ref ParentProcessUtils processInformation, int processInformationLength, out int returnLength);
 
+	public static Process? GetParentWithWindow()
+	{
+		for (var parent = GetParentProcess(); parent is not null; parent = GetParentProcess(parent))
+		{
+			if (parent.MainWindowHandle > 0)
+			{
+				return parent;
+			}
+		}
+		return null;
+	}
+
 	/// <summary>
 	/// Gets the parent process of the current process.
 	/// </summary>
